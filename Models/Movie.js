@@ -6,6 +6,10 @@ const MovieSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    fileid: {
+        type: String,
+        required: true
+    },
     description: String,
     rating: {
         type: Number,
@@ -18,9 +22,14 @@ const MovieSchema = new mongoose.Schema({
         unique: true
     },
     download_link: String,
-    poster_image: Buffer,
+    poster_image: {
+        data: Buffer,
+        contentType: String
+    },
     trailer_link: String,
     summary: String,
+    duration: String,
+    size: String,
     categories: {
         type: [String],
         trim: true
