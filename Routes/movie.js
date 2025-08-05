@@ -30,16 +30,29 @@ router.post("/add", upload.single('poster_image'), async (req, res) => {
             return res.status(400).json({ error: "Movie with this slug already exists" });
         }
 
+        let poster_image = undefined;
+        let posterUrl = "";
+
+        if (req.file) {
+            const buffer = req.file.buffer;
+            const contentType = req.file.mimetype;
+            const base64 = buffer.toString("base64");
+            posterUrl = `data:${contentType};base64,${base64}`;
+
+            poster_image = {
+                data: buffer,
+                contentType: contentType
+            };
+        }
+
         const movie = new Movie({
             movie_name,
             fileid,
             slug,
             description,
             rating,
-            poster_image: req.file ? {
-                data: req.file.buffer,
-                contentType: req.file.mimetype
-            } : undefined,
+            poster_image,
+            posterUrl,
             download_link,
             trailer_link,
             summary,
@@ -57,9 +70,18 @@ router.post("/add", upload.single('poster_image'), async (req, res) => {
     }
 });
 
-router.get("/all", async (req, res) => {
+router.get("/getmovie", async (req, res) => {
     try {
-        const movies = await Movie.find().sort({ createdAt: -1 });
+        const { search } = req.query;
+        let movies;
+
+        if (search && search.trim() !== "") {
+            const regex = new RegExp(search.trim(), "i");
+
+            movies = await Movie.find({ $or: [{ movie_name: regex }, { genre: regex }] });
+        } else {
+            movies = await Movie.find().sort({ createdAt: -1 });
+        }
         res.status(200).json({ success: true, count: movies.length, movies });
     } catch (error) {
         console.error(error.message);

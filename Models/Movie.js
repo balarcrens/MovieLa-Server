@@ -26,6 +26,9 @@ const MovieSchema = new mongoose.Schema({
         data: Buffer,
         contentType: String
     },
+    posterUrl: {
+        type: String,
+    },
     trailer_link: String,
     summary: String,
     duration: String,

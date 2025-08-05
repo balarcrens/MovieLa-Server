@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 const path = require("path");
 const fs = require("fs");
 const TelegramBot = require("node-telegram-bot-api");
-const mongodb = require("./db");
+const mongodb = require("./db.js");
 const Movie = require("./Models/Movie.js");
 
 mongodb();
@@ -20,11 +20,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 const BOT_TOKEN = process.env.BOT_TOKEN || '7937713026:AAGq9aVv0iFi9SulxeiyngvFHBxUudOMye4';
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 const CHANNEL_ID = -1002626082705;
-
-// ✅ /start command
-// bot.onText(/\/start/, (msg) => {
-//     bot.sendMessage(msg.chat.id, `🎬 Welcome to Moviela Bot!\n\n🔎 Send a movie name to get its download link.`);
-// });
 
 bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
     const chatId = msg.chat.id;
@@ -52,18 +47,6 @@ bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
         bot.sendMessage(chatId, `❌ Failed to send movie. Try again later.`);
     }
 });
-
-// ✅ Optional: Reply with file_id (for testing uploads)
-// bot.on('message', (msg) => {
-//     if (msg.video) {
-//         bot.sendMessage(msg.chat.id, `🎬 Video File ID:\n${msg.video.file_id}`);
-//     } else if (msg.document) {
-//         bot.sendMessage(msg.chat.id, `📄 Document File ID:\n${msg.document.file_id}`);
-//     } else if (msg.photo) {
-//         const fileId = msg.photo[msg.photo.length - 1].file_id;
-//         bot.sendMessage(msg.chat.id, `🖼️ Photo File ID:\n${fileId}`);
-//     }
-// });
 
 bot.on('channel_post', (msg) => {
     console.log("📨 New message from channel:", JSON.stringify(msg, null, 2));
