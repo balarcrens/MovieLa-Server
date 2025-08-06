@@ -16,13 +16,26 @@ const app = express();
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const SERVER_URL = process.env.SERVER_URL;
 
-const bot = new TelegramBot(BOT_TOKEN);
+const bot = new TelegramBot(BOT_TOKEN, { webHook: true });
 bot.setWebHook(`${SERVER_URL}/bot${BOT_TOKEN}`);
 
 // Middleware
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://movie-la.vercel.app"
+];
+
 app.use(cors({
-    origin: 'https://movie-la.vercel.app',
-    credentials: true
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        } else {
+            return callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true,
 }));
 app.use(express.json());
 app.use(bodyParser.json());
