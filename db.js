@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 // const URI = 'mongodb://localhost:27017/MovieDb';
-import dotenv from 'dotenv';
+const dotenv = require('dotenv');
 
 dotenv.config();
 
