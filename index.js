@@ -12,8 +12,8 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: 'https://movie-la.vercel.app/',
-  credentials: true
+    origin: 'https://movie-la.vercel.app',
+    credentials: true
 }));
 
 // Middlewares
@@ -36,7 +36,7 @@ bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
 
     try {
         const movie = await Movie.findOne({ slug: payload });
-        
+
         if (!movie) {
             return bot.sendMessage(chatId, `❌ Movie not found for: ${payload}`);
         }
