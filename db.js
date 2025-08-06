@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const mongodb = async () => {
-    const mongoURI = process.env.MONGODB_URI;
+    const mongoURI = process.env.DB_URI;
 
     mongoose.connect(mongoURI, {
         useNewUrlParser: true,
