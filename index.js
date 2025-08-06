@@ -22,9 +22,24 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Telegram Bot Config
-const BOT_TOKEN = process.env.BOT_TOKEN || '7937713026:AAGq9aVv0iFi9SulxeiyngvFHBxUudOMye4';
-const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const bot = new TelegramBot(BOT_TOKEN, {
+    polling: process.env.NODE_ENV !== 'production',
+});
+
 const CHANNEL_ID = -1002626082705;
+
+if (process.env.NODE_ENV === 'production') {
+    bot.setWebHook(`${process.env.SERVER_URL}/bot${BOT_TOKEN}`);
+    app.post(`/bot${BOT_TOKEN}`, (req, res) => {
+        bot.processUpdate(req.body);
+        res.sendStatus(200);
+    });
+} else {
+    bot.on('message', (msg) => {
+        bot.sendMessage(msg.chat.id, 'Bot is running in dev mode');
+    });
+}
 
 bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
     const chatId = msg.chat.id;
