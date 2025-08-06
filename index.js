@@ -11,6 +11,11 @@ mongodb();
 dotenv.config();
 const app = express();
 
+app.use(cors({
+  origin: 'https://movie-la.vercel.app/',
+  credentials: true
+}));
+
 // Middlewares
 app.use(cors());
 app.use(express.json());
