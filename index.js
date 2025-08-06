@@ -4,28 +4,37 @@ const dotenv = require("dotenv");
 const path = require("path");
 const fs = require("fs");
 const TelegramBot = require("node-telegram-bot-api");
+const bodyParser = require("body-parser");
+
 const mongodb = require("./db.js");
 const Movie = require("./Models/Movie.js");
 
-mongodb();
 dotenv.config();
-const app = express();
+mongodb();
 
+const app = express();
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const SERVER_URL = process.env.SERVER_URL;
+
+const bot = new TelegramBot(BOT_TOKEN);
+bot.setWebHook(`${SERVER_URL}/bot${BOT_TOKEN}`);
+
+// Middleware
 app.use(cors({
     origin: 'https://movie-la.vercel.app',
     credentials: true
 }));
-
-// Middlewares
-app.use(cors());
 app.use(express.json());
+app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Telegram Bot Config
-const BOT_TOKEN = process.env.BOT_TOKEN || '7937713026:AAGq9aVv0iFi9SulxeiyngvFHBxUudOMye4';
-const bot = new TelegramBot(BOT_TOKEN, { polling: true });
-const CHANNEL_ID = -1002626082705;
+// Webhook endpoint for Telegram
+app.post(`/bot${BOT_TOKEN}`, (req, res) => {
+    bot.processUpdate(req.body);
+    res.sendStatus(200);
+});
 
+// Telegram Commands
 bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
     const chatId = msg.chat.id;
     const payload = match[1]?.trim().toLowerCase();
@@ -46,13 +55,13 @@ bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
             parse_mode: "Markdown"
         });
 
-        // console.log(`✅ Sent: ${movie.movie_name}`);
     } catch (err) {
         console.error("❌ Error sending movie:", err.message);
         bot.sendMessage(chatId, `❌ Failed to send movie. Try again later.`);
     }
 });
 
+// Channel messages
 bot.on('channel_post', (msg) => {
     console.log("📨 New message from channel:", JSON.stringify(msg, null, 2));
 
@@ -72,12 +81,15 @@ bot.on('channel_post', (msg) => {
     }
 });
 
+// Static Home Route
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
 
+// Movie API
 app.use('/api/v1/movie', require('./Routes/movie.js'));
 
+// Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
