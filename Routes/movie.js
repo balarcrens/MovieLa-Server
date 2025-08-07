@@ -10,7 +10,7 @@ const upload = multer({ storage });
 
 const cpUpload = upload.fields([
     { name: 'poster_image', maxCount: 1 },
-    { name: 'screenshots', maxCount: 10 }
+    { name: 'screenshots[]', maxCount: 10 }
 ]);
 
 router.post("/add", cpUpload, async (req, res) => {
@@ -43,11 +43,11 @@ router.post("/add", cpUpload, async (req, res) => {
         }
 
         let screenshots = [];
-        if (req.files["screenshots"]) {
-            screenshots = req.files["screenshots"].map((file) => {
+        if (req.files["screenshots[]"]) {
+            screenshots = req.files["screenshots[]"].map((file) => {
                 const base64 = file.buffer.toString("base64");
                 return `data:${file.mimetype};base64,${base64}`;
-            });
+            }); 
         }
 
         const movie = new Movie({
