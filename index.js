@@ -19,7 +19,7 @@ const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 // Middleware
 app.use(
     cors({
-        origin: ["https://movie-la.vercel.app", "http://localhost:5173"],
+        origin: ["https://movie-la.vercel.app", "http://localhost:5173", "https://moviela.vercel.app"],
         credentials: true,
     })
 );

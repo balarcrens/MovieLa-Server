@@ -8,7 +8,12 @@ const slugify = require("slugify");
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-router.post("/add", upload.single('poster_image'), async (req, res) => {
+const cpUpload = upload.fields([
+    { name: 'poster_image', maxCount: 1 },
+    { name: 'screenshots', maxCount: 10 }
+]);
+
+router.post("/add", cpUpload, async (req, res) => {
     try {
         const {
             movie_name,
@@ -19,9 +24,9 @@ router.post("/add", upload.single('poster_image'), async (req, res) => {
             summary,
             duration,
             size,
-            categories,
-            screenshots
+            categories
         } = req.body;
+
         const slug = slugify(movie_name, { lower: true, strict: true });
         const download_link = `https://t.me/movieladownload/start=${slug}`;
 
@@ -30,19 +35,19 @@ router.post("/add", upload.single('poster_image'), async (req, res) => {
             return res.status(400).json({ error: "Movie with this slug already exists" });
         }
 
-        let poster_image = undefined;
         let posterUrl = "";
+        if (req.files["poster_image"] && req.files["poster_image"][0]) {
+            const file = req.files["poster_image"][0];
+            const base64 = file.buffer.toString("base64");
+            posterUrl = `data:${file.mimetype};base64,${base64}`;
+        }
 
-        if (req.file) {
-            const buffer = req.file.buffer;
-            const contentType = req.file.mimetype;
-            const base64 = buffer.toString("base64");
-            posterUrl = `data:${contentType};base64,${base64}`;
-
-            poster_image = {
-                data: buffer,
-                contentType: contentType
-            };
+        let screenshots = [];
+        if (req.files["screenshots"]) {
+            screenshots = req.files["screenshots"].map((file) => {
+                const base64 = file.buffer.toString("base64");
+                return `data:${file.mimetype};base64,${base64}`;
+            });
         }
 
         const movie = new Movie({
@@ -51,7 +56,6 @@ router.post("/add", upload.single('poster_image'), async (req, res) => {
             slug,
             description,
             rating,
-            poster_image,
             posterUrl,
             download_link,
             trailer_link,
