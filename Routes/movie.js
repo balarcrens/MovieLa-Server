@@ -1,19 +1,9 @@
 const express = require("express");
-// const { body, validationResult } = require("express-validator");
 const Movie = require("../Models/Movie");
-const multer = require("multer");
 const router = express.Router();
 const slugify = require("slugify");
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
-const cpUpload = upload.fields([
-    { name: 'poster_image', maxCount: 1 },
-    { name: 'screenshots[]', maxCount: 10 }
-]);
-
-router.post("/add", cpUpload, async (req, res) => {
+router.post("/add", async (req, res) => {
     try {
         const {
             movie_name,
@@ -24,7 +14,9 @@ router.post("/add", cpUpload, async (req, res) => {
             summary,
             duration,
             size,
-            categories
+            categories,
+            posterUrl,
+            screenshots = []
         } = req.body;
 
         const slug = slugify(movie_name, { lower: true, strict: true });
@@ -33,21 +25,6 @@ router.post("/add", cpUpload, async (req, res) => {
         const existing = await Movie.findOne({ slug });
         if (existing) {
             return res.status(400).json({ error: "Movie with this slug already exists" });
-        }
-
-        let posterUrl = "";
-        if (req.files["poster_image"] && req.files["poster_image"][0]) {
-            const file = req.files["poster_image"][0];
-            const base64 = file.buffer.toString("base64");
-            posterUrl = `data:${file.mimetype};base64,${base64}`;
-        }
-
-        let screenshots = [];
-        if (req.files["screenshots[]"]) {
-            screenshots = req.files["screenshots[]"].map((file) => {
-                const base64 = file.buffer.toString("base64");
-                return `data:${file.mimetype};base64,${base64}`;
-            }); 
         }
 
         const movie = new Movie({
@@ -74,6 +51,7 @@ router.post("/add", cpUpload, async (req, res) => {
     }
 });
 
+// Get all movies (with optional search)
 router.get("/getmovie", async (req, res) => {
     try {
         const { search } = req.query;
@@ -81,8 +59,7 @@ router.get("/getmovie", async (req, res) => {
 
         if (search && search.trim() !== "") {
             const regex = new RegExp(search.trim(), "i");
-
-            movies = await Movie.find({ $or: [{ movie_name: regex }, { genre: regex }] });
+            movies = await Movie.find({ $or: [{ movie_name: regex }, { categories: regex }] });
         } else {
             movies = await Movie.find().sort({ createdAt: -1 });
         }
@@ -93,6 +70,7 @@ router.get("/getmovie", async (req, res) => {
     }
 });
 
+// Get movie by ID
 router.get("/:id", async (req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
@@ -103,14 +81,13 @@ router.get("/:id", async (req, res) => {
     }
 });
 
+// Delete movie by ID
 router.delete("/delete/:id", async (req, res) => {
     try {
         const deletedMovie = await Movie.findByIdAndDelete(req.params.id);
-
         if (!deletedMovie) {
             return res.status(404).json({ error: "Movie not found" });
         }
-
         res.json({ success: true, message: "Movie deleted successfully" });
     } catch (err) {
         console.error(err.message);

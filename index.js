@@ -34,7 +34,7 @@ bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
     if (!payload) {
         return bot.sendMessage(
             chatId,
-            `🎬 Welcome to Moviela Bot!\nSend a movie name or click download from the website.`
+            `🎬 Welcome to Moviela Bot!\nDownload Your Favourite Movie From The Website.\n https://moviela.vercel.app`
         );
     }
 

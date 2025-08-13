@@ -22,13 +22,13 @@ const MovieSchema = new mongoose.Schema({
         unique: true
     },
     download_link: String,
-    poster_image: {
-        data: Buffer,
-        contentType: String
-    },
+
     posterUrl: {
         type: String,
+        required: true,
+        trim: true
     },
+
     trailer_link: String,
     summary: String,
     duration: String,
@@ -39,10 +39,6 @@ const MovieSchema = new mongoose.Schema({
     },
     screenshots: {
         type: [String],
-        created_at: {
-            type: Date,
-            default: Date.now
-        }
     }
 }, {
     timestamps: true
