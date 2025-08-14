@@ -22,13 +22,11 @@ const MovieSchema = new mongoose.Schema({
         unique: true
     },
     download_link: String,
-
     posterUrl: {
         type: String,
         required: true,
         trim: true
     },
-
     trailer_link: String,
     summary: String,
     duration: String,
