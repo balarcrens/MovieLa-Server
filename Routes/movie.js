@@ -3,7 +3,10 @@ const Movie = require("../Models/Movie");
 const router = express.Router();
 const slugify = require("slugify");
 
-router.post("/add", async (req, res) => {
+router.post("/add", upload.fields([
+    { name: "poster", maxCount: 1 },
+    { name: "screenshots", maxCount: 5 }
+]), async (req, res) => {
     try {
         const {
             movie_name,
@@ -14,17 +17,28 @@ router.post("/add", async (req, res) => {
             summary,
             duration,
             size,
-            categories,
-            posterUrl,
-            screenshots = []
+            categories
         } = req.body;
 
         const slug = slugify(movie_name, { lower: true, strict: true });
         const download_link = `https://t.me/movieladownload/start=${slug}`;
 
-        const existing = await Movie.findOne({ slug });
-        if (existing) {
-            return res.status(400).json({ error: "Movie with this slug already exists" });
+        let posterUrl = "";
+        if (req.files.poster) {
+            const uploadRes = await cloudinary.uploader.upload(req.files.poster[0].path, {
+                folder: "movies/posters"
+            });
+            posterUrl = uploadRes.secure_url;
+        }
+
+        let screenshots = [];
+        if (req.files.screenshots) {
+            for (const file of req.files.screenshots) {
+                const uploadRes = await cloudinary.uploader.upload(file.path, {
+                    folder: "movies/screenshots"
+                });
+                screenshots.push(uploadRes.secure_url);
+            }
         }
 
         const movie = new Movie({
@@ -51,7 +65,6 @@ router.post("/add", async (req, res) => {
     }
 });
 
-// Get all movies (with optional search)
 router.get("/getmovie", async (req, res) => {
     try {
         const { search } = req.query;
@@ -70,7 +83,6 @@ router.get("/getmovie", async (req, res) => {
     }
 });
 
-// Get movie by ID
 router.get("/:id", async (req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
@@ -81,7 +93,6 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// Delete movie by ID
 router.delete("/delete/:id", async (req, res) => {
     try {
         const deletedMovie = await Movie.findByIdAndDelete(req.params.id);
