@@ -2,10 +2,12 @@ const express = require("express");
 const Movie = require("../Models/Movie");
 const router = express.Router();
 const slugify = require("slugify");
+const upload = require("../config/multer");
+const cloudinary = require("../config/cloudinary");
 
 router.post("/add", upload.fields([
     { name: "poster", maxCount: 1 },
-    { name: "screenshots", maxCount: 5 }
+    { name: "screenshots", maxCount: 10 }
 ]), async (req, res) => {
     try {
         const {
@@ -25,18 +27,20 @@ router.post("/add", upload.fields([
 
         let posterUrl = "";
         if (req.files.poster) {
-            const uploadRes = await cloudinary.uploader.upload(req.files.poster[0].path, {
-                folder: "movies/posters"
-            });
+            const uploadRes = await cloudinary.uploader.upload(
+                req.files.poster[0].path,
+                { folder: "movies/posters" }
+            );
             posterUrl = uploadRes.secure_url;
         }
 
         let screenshots = [];
         if (req.files.screenshots) {
             for (const file of req.files.screenshots) {
-                const uploadRes = await cloudinary.uploader.upload(file.path, {
-                    folder: "movies/screenshots"
-                });
+                const uploadRes = await cloudinary.uploader.upload(
+                    file.path,
+                    { folder: "movies/screenshots" }
+                );
                 screenshots.push(uploadRes.secure_url);
             }
         }
@@ -60,7 +64,7 @@ router.post("/add", upload.fields([
         const savedMovie = await movie.save();
         res.status(201).json({ success: true, movie: savedMovie });
     } catch (error) {
-        console.error(error.message);
+        console.log(error.message);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
