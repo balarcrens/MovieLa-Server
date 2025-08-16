@@ -3,7 +3,7 @@ const Movie = require("../Models/Movie");
 const router = express.Router();
 const slugify = require("slugify");
 const upload = require("../config/multer");
-const cloudinary = require("../config/cloudinary");
+const { uploadToCloudinary } = require("../config/cloudinary");
 
 router.post("/add", upload.fields([
     { name: "poster", maxCount: 1 },
@@ -25,71 +25,42 @@ router.post("/add", upload.fields([
         const slug = slugify(movie_name, { lower: true, strict: true });
         const download_link = `https://t.me/movieladownload/start=${slug}`;
 
+        // Upload poster directly
         let posterUrl = "";
         if (req.files.poster) {
-            const posterFile = req.files.poster[0];
-            const uploadRes = await cloudinary.uploader.upload_stream(
-                {
-                    folder: "movies/posters",
-                    public_id: posterFile.originalname.split(".")[0],
-                    resource_type: "image"
-                },
-                (error, result) => {
-                    if (error) throw error;
-                    posterUrl = result.secure_url;
-                }
-            );
-
-            const stream = require("stream");
-            const bufferStream = new stream.PassThrough();
-            bufferStream.end(posterFile.buffer);
-            bufferStream.pipe(uploadRes);
+            posterUrl = await uploadToCloudinary(req.files.poster[0], "movies/posters");
         }
 
+        // Upload screenshots directly
         let screenshots = [];
         if (req.files.screenshots) {
-            for (const file of req.files.screenshots) {
-                const uploadRes = cloudinary.uploader.upload_stream(
-                    {
-                        folder: "movies/screenshots",
-                        public_id: file.originalname.split(".")[0],
-                        resource_type: "image"
-                    },
-                    (error, result) => {
-                        if (error) throw error;
-                        screenshots.push(result.secure_url);
-                    }
-                );
-
-                const stream = require("stream");
-                const bufferStream = new stream.PassThrough();
-                bufferStream.end(file.buffer);
-                bufferStream.pipe(uploadRes);
-            }
+            screenshots = await Promise.all(
+                req.files.screenshots.map(file =>
+                    uploadToCloudinary(file, "movies/screenshots")
+                )
+            );
         }
 
-        setTimeout(async () => {
-            const movie = new Movie({
-                movie_name,
-                fileid,
-                slug,
-                description,
-                rating,
-                posterUrl,
-                download_link,
-                trailer_link,
-                summary,
-                duration,
-                size,
-                categories: Array.isArray(categories) ? categories : [categories],
-                screenshots
-            });
+        const movie = new Movie({
+            movie_name,
+            fileid,
+            slug,
+            description,
+            rating,
+            posterUrl,
+            download_link,
+            trailer_link,
+            summary,
+            duration,
+            size,
+            categories: Array.isArray(categories) ? categories : [categories],
+            screenshots,
+        });
 
-            const savedMovie = await movie.save();
-            res.status(201).json({ success: true, movie: savedMovie });
-        }, 2000);
+        const savedMovie = await movie.save();
+        res.status(201).json({ success: true, movie: savedMovie });
     } catch (error) {
-        console.log(error.message);
+        console.error(error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
