@@ -4,8 +4,9 @@ const router = express.Router();
 const slugify = require("slugify");
 const upload = require("../config/multer");
 const { uploadToCloudinary } = require("../config/cloudinary");
+const RequireAdmin = require("../Middleware/RequireAdmin");
 
-router.post("/add", upload.fields([
+router.post("/add", RequireAdmin, upload.fields([
     { name: "poster", maxCount: 1 },
     { name: "screenshots", maxCount: 10 }
 ]), async (req, res) => {

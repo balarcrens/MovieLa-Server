@@ -79,6 +79,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/movie", require("./Routes/movie.js"));
 
+app.use("/api/v1/auth", require("./Routes/auth.js"));
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
