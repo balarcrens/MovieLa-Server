@@ -6,6 +6,7 @@ const upload = require("../config/multer");
 const { uploadToCloudinary } = require("../config/cloudinary");
 const RequireAdmin = require("../Middleware/RequireAdmin");
 
+// Add Movie
 router.post("/add", RequireAdmin, upload.fields([
     { name: "poster", maxCount: 1 },
     { name: "screenshots", maxCount: 10 }
@@ -66,6 +67,7 @@ router.post("/add", RequireAdmin, upload.fields([
     }
 });
 
+// Fetch All Movie
 router.get("/getmovie", async (req, res) => {
     try {
         const { search } = req.query;
@@ -84,16 +86,32 @@ router.get("/getmovie", async (req, res) => {
     }
 });
 
+// Fetch Movie By Id
 router.get("/:id", async (req, res) => {
     try {
         const movie = await Movie.findById(req.params.id);
         if (!movie) return res.status(404).json({ error: "Movie not found" });
         res.json({ movie });
     } catch (error) {
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ error: "Server error", message: error.message });
     }
 });
 
+// Fetch Movie By Genres
+router.get("/:genres", async (req, res) => {
+    try {
+        const { genre } = req.params;
+        const movie = await Movie.find({ categories: genre });
+        if (!movie || movie.length === 0) {
+            return res.status(404).json({ error: "No movies found for this genre" });
+        }
+        res.json({ movie });
+    } catch (error) {
+        res.status(500).json({ error: "Server error", message: error.message });
+    }
+});
+
+// Delete Movie By Id
 router.delete("/delete/:id", async (req, res) => {
     try {
         const deletedMovie = await Movie.findByIdAndDelete(req.params.id);
@@ -103,7 +121,7 @@ router.delete("/delete/:id", async (req, res) => {
         res.json({ success: true, message: "Movie deleted successfully" });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ error: "Internal Server Error" });
+        res.status(500).json({ error: "Internal Server Error", message: error.message });
     }
 });
 
