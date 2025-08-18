@@ -61,7 +61,7 @@ router.post("/add", RequireAdmin, upload.fields([
         const savedMovie = await movie.save();
         res.status(201).json({ success: true, movie: savedMovie });
     } catch (error) {
-        console.error(error);
+        console.log(error.message);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
