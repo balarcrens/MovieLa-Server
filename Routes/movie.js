@@ -75,7 +75,7 @@ router.get("/getmovie", async (req, res) => {
 
         if (search && search.trim() !== "") {
             const regex = new RegExp(search.trim(), "i");
-            movies = await Movie.find({ $or: [{ movie_name: regex }, { categories: regex }] });
+            movies = await Movie.find({ $or: [{ movie_name: regex }, { categories: regex }] }.sort({ createdAt: -1 }));
         } else {
             movies = await Movie.find().sort({ createdAt: -1 });
         }
@@ -97,15 +97,20 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// Fetch Movie By Genres
-router.get("/:genres", async (req, res) => {
+// Fetch movies by category
+router.get("/category/:category", async (req, res) => {
     try {
-        const { genre } = req.params;
-        const movie = await Movie.find({ categories: genre });
-        if (!movie || movie.length === 0) {
-            return res.status(404).json({ error: "No movies found for this genre" });
+        const category = req.params.category;
+
+        const movies = await Movie.find({
+            categories: { $in: [new RegExp("^" + category + "$", "i")] }
+        }).sort({ createdAt: -1 });
+
+        if (!movies.length) {
+            return res.status(404).json({ error: "No movies found for this category" });
         }
-        res.json({ movie });
+
+       res.json({ success: true, movies });
     } catch (error) {
         res.status(500).json({ error: "Server error", message: error.message });
     }
