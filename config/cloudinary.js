@@ -4,9 +4,9 @@ dotenv.config();
 const stream = require("stream");
 
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || djkyswpve,
-    api_key: process.env.CLOUDINARY_API_KEY || 372668489675622,
-    api_secret: process.env.CLOUDINARY_API_SECRET || pghx8f1RzTByjpCGeaPEzpgSHdg,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'djkyswpve',
+    api_key: process.env.CLOUDINARY_API_KEY || '372668489675622',
+    api_secret: process.env.CLOUDINARY_API_SECRET || 'pghx8f1RzTByjpCGeaPEzpgSHdg',
 });
 
 function uploadToCloudinary(file, folder) {
