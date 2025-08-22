@@ -1,7 +1,6 @@
-dotenv.config();
-
 const cloudinary = require("cloudinary").v2;
 const dotenv = require("dotenv");
+dotenv.config();
 const stream = require("stream");
 
 cloudinary.config({
