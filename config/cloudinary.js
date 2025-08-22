@@ -1,13 +1,13 @@
+dotenv.config();
+
 const cloudinary = require("cloudinary").v2;
 const dotenv = require("dotenv");
 const stream = require("stream");
 
-dotenv.config();
-
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || djkyswpve,
+    api_key: process.env.CLOUDINARY_API_KEY || 372668489675622,
+    api_secret: process.env.CLOUDINARY_API_SECRET || pghx8f1RzTByjpCGeaPEzpgSHdg,
 });
 
 function uploadToCloudinary(file, folder) {
