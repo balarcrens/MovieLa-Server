@@ -28,7 +28,55 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/\/help/, async (msg) => {
+    const chatId = msg.chat.id;
+
+    bot.sendMessage(
+        chatId,
+        `🤖 *Moviela Bot Help*\n
+Here are the available commands:\n
+/help - Show this help menu
+/websitelink - Get the official Moviela website
+/moviela <movie-slug> - Download a specific movie
+/latest - Get the latest uploaded movies
+`
+        , { parse_mode: "Markdown" }
+    );
+});
+
+bot.onText(/\/websitelink/, async (msg) => {
+    const chatId = msg.chat.id;
+
+    bot.sendMessage(
+        chatId,
+        `🌐 Visit our website for more movies:\n👉 https://moviela.vercel.app`
+    );
+});
+
+bot.onText(/\/latest/, async (msg) => {
+    const chatId = msg.chat.id;
+
+    try {
+        const latestMovies = await Movie.find().sort({ createdAt: -1 }).limit(5);
+
+        if (latestMovies.length === 0) {
+            return bot.sendMessage(chatId, "❌ No movies uploaded yet.");
+        }
+
+        let response = "🔥 *Latest Movies Uploaded:*\n\n";
+        latestMovies.forEach((m, i) => {
+            response += `${i + 1}. 🎬 *${m.movie_name}* \n🔗 /moviela ${m.slug}\n\n`;
+        });
+
+        bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+    } catch (err) {
+        console.error(err.message);
+        bot.sendMessage(chatId, "❌ Failed to fetch latest movies.");
+    }
+});
+
+
+bot.onText(/\/moviela(?:\s+(.+))?/, async (msg, match) => {
     const chatId = msg.chat.id;
     const payload = match[1]?.trim().toLowerCase();
 
@@ -47,7 +95,7 @@ bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
         }
 
         await bot.sendDocument(chatId, movie.fileid, {
-            caption: `🎬 *${movie.movie_name}*\n\n🕒 Duration: ${movie.duration || "N/A"}\n📁 Size: ${movie.size || "N/A"}\n🔗 Download and Enjoy!`,
+            caption: `🎬 *${movie.movie_name}*\n\n🕒 Duration: ${movie.duration || "N/A"}\n📁 Size: ${movie.size || "N/A"}\n🔗 Download and Enjoy! \n\n Explore All Movies 🔗👇 \n https://moviela.vercel.app`,
             parse_mode: "Markdown",
         });
     } catch (err) {
