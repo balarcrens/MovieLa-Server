@@ -89,7 +89,7 @@ bot.onText(/\/latest/, async (msg) => {
     }
 });
 
-bot.onText(/\/moviela(?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
     const chatId = msg.chat.id;
     const payload = match[1]?.trim().toLowerCase();
 
