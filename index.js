@@ -13,21 +13,40 @@ mongodb();
 
 const app = express();
 const BOT_TOKEN = process.env.BOT_TOKEN;
+const DOMAIN = process.env.DOMAIN;
+const NODE_ENV = process.env.NODE_ENV || "development";
 
-const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+let bot;
+
+// Use Polling in local, Webhook in production
+if (NODE_ENV === "production") {
+    bot = new TelegramBot(BOT_TOKEN);
+    bot.setWebHook(`${DOMAIN}/bot${BOT_TOKEN}`);
+    console.log("🚀 Bot running in webhook mode");
+} else {
+    bot = new TelegramBot(BOT_TOKEN, { polling: true });
+    console.log("🚀 Bot running in polling mode");
+}
 
 // Middleware
 app.use(
     cors({
-        origin: ["https://movie-la.vercel.app", "http://localhost:5173", "https://moviela.vercel.app"],
+        origin: ["http://localhost:5173", "https://moviela.vercel.app"],
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true,
     })
 );
 app.use(express.json());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
+// 📩 Webhook endpoint for production
+app.post(`/bot${BOT_TOKEN}`, (req, res) => {
+    bot.processUpdate(req.body);
+    res.sendStatus(200);
+});
+
+// ======================= BOT COMMANDS =======================
 bot.onText(/\/help/, async (msg) => {
     const chatId = msg.chat.id;
 
@@ -38,19 +57,14 @@ Here are the available commands:\n
 /help - Show this help menu
 /websitelink - Get the official Moviela website
 /moviela <movie-slug> - Download a specific movie
-/latest - Get the latest uploaded movies
-`
-        , { parse_mode: "Markdown" }
+/latest - Get the latest uploaded movies`,
+        { parse_mode: "Markdown" }
     );
 });
 
 bot.onText(/\/websitelink/, async (msg) => {
     const chatId = msg.chat.id;
-
-    bot.sendMessage(
-        chatId,
-        `🌐 Visit our website for more movies:\n👉 https://moviela.vercel.app`
-    );
+    bot.sendMessage(chatId, `🌐 Visit our website for more movies:\n👉 https://moviela.vercel.app`);
 });
 
 bot.onText(/\/latest/, async (msg) => {
@@ -74,7 +88,6 @@ bot.onText(/\/latest/, async (msg) => {
         bot.sendMessage(chatId, "❌ Failed to fetch latest movies.");
     }
 });
-
 
 bot.onText(/\/moviela(?:\s+(.+))?/, async (msg, match) => {
     const chatId = msg.chat.id;
@@ -122,14 +135,15 @@ bot.on("channel_post", (msg) => {
     }
 });
 
+// ======================= ROUTES =======================
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "views", "index.html"));
 });
 
 app.use("/api/v1/movie", require("./Routes/movie.js"));
-
 app.use("/api/v1/auth", require("./Routes/auth.js"));
 
+// ======================= SERVER =======================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
