@@ -16,7 +16,7 @@ router.post("/login", (req, res) => {
 
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         // Generate token
-        const token = jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: "2h" });
+        const token = jwt.sign({ role: "admin" }, JWT_SECRET);
         return res.json({ success: true, token });
     } else {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
