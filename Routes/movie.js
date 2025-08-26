@@ -86,10 +86,10 @@ router.get("/getmovie", async (req, res) => {
     }
 });
 
-// Fetch Movie By Id
-router.get("/:id", async (req, res) => {
+// Fetch Movie By Slug
+router.get("/:slug", async (req, res) => {
     try {
-        const movie = await Movie.findById(req.params.id);
+        const movie = await Movie.findOne({ slug: req.params.slug });
         if (!movie) return res.status(404).json({ error: "Movie not found" });
         res.json({ movie });
     } catch (error) {
@@ -110,7 +110,7 @@ router.get("/category/:category", async (req, res) => {
             return res.status(404).json({ error: "No movies found for this category" });
         }
 
-       res.json({ success: true, movies });
+        res.json({ success: true, movies });
     } catch (error) {
         res.status(500).json({ error: "Server error", message: error.message });
     }
