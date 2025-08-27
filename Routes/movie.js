@@ -115,21 +115,6 @@ router.get("/category/:category", async (req, res) => {
     }
 });
 
-// GET /api/v1/movie/:slug
-router.get("/:slug", async (req, res) => {
-    try {
-        const movie = await Movie.findOneAndUpdate(
-            { slug: req.params.slug },
-            { $inc: { views: 1 } },
-            { new: true }
-        );
-        if (!movie) return res.status(404).json({ error: "Movie not found" });
-        res.json({ movie });
-    } catch (error) {
-        res.status(500).json({ error: "Server error", message: error.message });
-    }
-});
-
 // GET /api/v1/movie/filter
 router.get("/filter", async (req, res) => {
     try {
@@ -152,6 +137,21 @@ router.get("/filter", async (req, res) => {
         const movies = await Movie.find(filter).sort(sort);
         res.json({ movies });
 
+    } catch (error) {
+        res.status(500).json({ error: "Server error", message: error.message });
+    }
+});
+
+// GET /api/v1/movie/:slug
+router.get("/:slug", async (req, res) => {
+    try {
+        const movie = await Movie.findOneAndUpdate(
+            { slug: req.params.slug },
+            { $inc: { views: 1 } },
+            { new: true }
+        );
+        if (!movie) return res.status(404).json({ error: "Movie not found" });
+        res.json({ movie });
     } catch (error) {
         res.status(500).json({ error: "Server error", message: error.message });
     }
