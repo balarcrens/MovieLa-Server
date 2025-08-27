@@ -122,7 +122,7 @@ router.get("/filter", async (req, res) => {
 
         let filter = {};
         if (industry) {
-            filter.industry = industry;
+            filter.industry = new RegExp(`^${industry}$`, "i");
         }
 
         let sort = {};
