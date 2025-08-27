@@ -29,6 +29,11 @@ const MovieSchema = new mongoose.Schema({
     releaseDate: { type: String, default: "N/A", trim: true },
     categories: [{ type: String, trim: true }],
     screenshots: [{ type: String, trim: true }],
+    industry: {
+        type: String,
+        enum: ["Bollywood", "Hollywood", "South", "Tollywood", "Kollywood", "Other"],
+        required: true
+    },
     actors: [{ type: String, trim: true }],
     director: { type: String, trim: true },
     language: {
@@ -37,7 +42,8 @@ const MovieSchema = new mongoose.Schema({
         trim: true
     },
     keywords: [{ type: String, trim: true }],
-    meta_description: { type: String, trim: true }
+    meta_description: { type: String, trim: true },
+    views: { type: Number, default: 0 }
 }, {
     timestamps: true
 });
