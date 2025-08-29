@@ -81,15 +81,27 @@ router.get("/getmovie", async (req, res) => {
         const { search } = req.query;
         let movies;
 
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+
         if (search && search.trim() !== "") {
             const regex = new RegExp(search.trim(), "i");
-            movies = await Movie.find({
-                $or: [{ movie_name: regex }, { categories: regex }]
-            }).sort({ createdAt: -1 });
+            movies = await Movie.find({ $or: [{ movie_name: regex }, { categories: regex }] }).sort({ createdAt: -1 }).skip(skip).limit(limit);
         } else {
-            movies = await Movie.find().sort({ createdAt: -1 });
+            movies = await Movie.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
         }
-        res.status(200).json({ success: true, count: movies.length, movies });
+
+        const totalMovies = await Movie.countDocuments(query);
+
+        res.status(200).json({
+            success: true,
+            movies,
+            count: movies.length,
+            totalMovies,
+            totalPages: Math.ceil(totalMovies / limit),
+            currentPage: page
+        });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ error: "Internal Server Error" });
