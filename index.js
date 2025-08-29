@@ -16,17 +16,8 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const DOMAIN = process.env.DOMAIN;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
-let bot;
-
-// Use Polling in local, Webhook in production
-if (NODE_ENV === "production") {
-    bot = new TelegramBot(BOT_TOKEN);
-    bot.setWebHook(`${DOMAIN}/bot${BOT_TOKEN}`);
-    console.log("🚀 Bot running in webhook mode");
-} else {
-    bot = new TelegramBot(BOT_TOKEN, { polling: true });
-    console.log("🚀 Bot running in polling mode");
-}
+let bot = new TelegramBot(BOT_TOKEN, { polling: true });
+console.log("🚀 Bot running in polling mode");
 
 // Middleware
 app.use(
@@ -39,12 +30,6 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
-
-// 📩 Webhook endpoint for production
-app.post(`/bot${BOT_TOKEN}`, (req, res) => {
-    bot.processUpdate(req.body);
-    res.sendStatus(200);
-});
 
 // ======================= BOT COMMANDS =======================
 bot.onText(/\/help/, async (msg) => {
