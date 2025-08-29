@@ -79,19 +79,25 @@ router.post(
 router.get("/getmovie", async (req, res) => {
     try {
         const { search } = req.query;
-        let movies;
 
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
 
+        // Build query object
+        let query = {};
         if (search && search.trim() !== "") {
             const regex = new RegExp(search.trim(), "i");
-            movies = await Movie.find({ $or: [{ movie_name: regex }, { categories: regex }] }).sort({ createdAt: -1 }).skip(skip).limit(limit);
-        } else {
-            movies = await Movie.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
+            query = { $or: [{ movie_name: regex }, { categories: regex }] };
         }
 
+        // Fetch movies
+        const movies = await Movie.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        // Count total matching documents
         const totalMovies = await Movie.countDocuments(query);
 
         res.status(200).json({
