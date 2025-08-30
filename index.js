@@ -4,7 +4,9 @@ const dotenv = require("dotenv");
 const path = require("path");
 const bodyParser = require("body-parser");
 const TelegramBot = require("node-telegram-bot-api");
-const fetch = require("node-fetch");
+
+const fetch = (...args) =>
+    import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 const mongodb = require("./db.js");
 const Movie = require("./Models/Movie.js");
@@ -24,8 +26,10 @@ let bot;
     try {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=`);
         console.log("✅ Webhook cleared");
+
         bot = new TelegramBot(BOT_TOKEN, { polling: true });
         console.log("🚀 Bot running in polling mode");
+
         registerBotCommands(bot);
     } catch (err) {
         console.error("❌ Error starting bot:", err.message);
@@ -51,18 +55,20 @@ function registerBotCommands(bot) {
         bot.sendMessage(
             chatId,
             `🤖 *Moviela Bot Help*\n
-            Here are the available commands:\n
-            /help - Show this help menu
-            /websitelink - Get the official Moviela website
-            /moviela <movie-slug> - Download a specific movie
-            /latest - Get the latest uploaded movies`,
+                /help - Show this help menu
+                /websitelink - Get the official Moviela website
+                /moviela <movie-slug> - Download a specific movie
+                /latest - Get the latest uploaded movies`,
             { parse_mode: "Markdown" }
         );
     });
 
     bot.onText(/\/websitelink/, async (msg) => {
         const chatId = msg.chat.id;
-        bot.sendMessage(chatId, `🌐 Visit our website for more movies:\n👉 https://moviela.vercel.app`);
+        bot.sendMessage(
+            chatId,
+            `🌐 Visit our website for more movies:\n👉 https://moviela.vercel.app`
+        );
     });
 
     bot.onText(/\/latest/, async (msg) => {
@@ -106,7 +112,9 @@ function registerBotCommands(bot) {
             }
 
             await bot.sendDocument(chatId, movie.fileid, {
-                caption: `🎬 *${movie.movie_name}*\n\n🕒 Duration: ${movie.duration || "N/A"}\n📁 Size: ${movie.size || "N/A"}\n🔗 Download and Enjoy! \n\n Explore All Movies 🔗👇 \n https://moviela.vercel.app`,
+                caption: `🎬 *${movie.movie_name}*\n\n🕒 Duration: ${movie.duration || "N/A"
+                    }\n📁 Size: ${movie.size || "N/A"
+                    }\n🔗 Download and Enjoy! \n\n Explore All Movies 🔗👇 \n https://moviela.vercel.app`,
                 parse_mode: "Markdown",
             });
         } catch (err) {
