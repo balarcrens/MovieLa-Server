@@ -31,7 +31,7 @@ const MovieSchema = new mongoose.Schema({
     screenshots: [{ type: String, trim: true }],
     industry: {
         type: String,
-        enum: ["Bollywood", "Hollywood", "South", "Tollywood", "Kollywood", "Other"],
+        enum: ["Bollywood", "Hollywood", "South", "Tollywood", "Kollywood", "Gujarati", "Other"],
         required: true
     },
     actors: [{ type: String, trim: true }],
