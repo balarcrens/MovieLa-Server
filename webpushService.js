@@ -1,4 +1,4 @@
-// /webpushService.js
+// webpushService.js
 const webPush = require("web-push");
 const Subscription = require("./Models/Subscription");
 require("dotenv").config();
@@ -10,11 +10,10 @@ webPush.setVapidDetails(
     process.env.VAPID_PRIVATE_KEY
 );
 
-// Save subscription to MongoDB
+// Save subscription to MongoDB (no duplicates)
 async function saveSubscription(subscription) {
     try {
         const existing = await Subscription.findOne({ endpoint: subscription.endpoint });
-
         if (!existing) {
             await Subscription.create(subscription);
             console.log("✅ Subscription saved");
@@ -27,18 +26,19 @@ async function saveSubscription(subscription) {
     }
 }
 
-// Send real push notifications to all subscribers
-async function sendNotification(title, body) {
+// Send push notifications to all subscribers
+async function sendNotification({ title, body, url }) {
     try {
         const subs = await Subscription.find();
-        const payload = JSON.stringify({ title, body, url: "https://moviela.vercel.app" });
+        const payload = JSON.stringify({ title, body, url });
 
-        subs.forEach((sub) => {
-            webPush.sendNotification(sub, payload).catch(err => {
-                console.error("❌ Failed to send notification to:", sub.endpoint);
-                console.error(err.message);
-            });
-        });
+        await Promise.all(
+            subs.map(sub =>
+                webPush.sendNotification(sub, payload).catch(err => {
+                    console.error("❌ Failed to send notification to:", sub.endpoint);
+                })
+            )
+        );
 
         console.log("📢 Notifications sent to all subscribers");
     } catch (err) {

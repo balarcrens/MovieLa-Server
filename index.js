@@ -6,7 +6,6 @@ const dotenv = require("dotenv");
 const path = require("path");
 const bodyParser = require("body-parser");
 const TelegramBot = require("node-telegram-bot-api");
-const { saveSubscription, sendNotification } = require("./webpushService");
 const Movie = require("./Models/Movie.js");
 
 dotenv.config();
@@ -133,25 +132,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1/movie", require("./Routes/movie.js"));
 app.use("/api/v1/auth", require("./Routes/auth.js"));
 app.use("/api/v1/requests", require("./Routes/request.js"));
-
-app.post("/api/v1/subscribe", async (req, res) => {
-    try {
-        await saveSubscription(req.body);
-        res.status(201).json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.post("/api/v1/notify", async (req, res) => {
-    const { title, body } = req.body;
-    try {
-        await sendNotification(title, body);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
+app.use("/api/v1/notifications", require("./Routes/notification.js"));
 
 // ======================= SERVER =======================
 const PORT = process.env.PORT || 3000;
