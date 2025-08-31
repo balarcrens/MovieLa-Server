@@ -17,13 +17,7 @@ const DOMAIN = process.env.DOMAIN;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
 // ======================= MIDDLEWARE =======================
-const corsOptions = {
-    origin: ["https://moviela.vercel.app", "http://localhost:5173"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true
-};
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
