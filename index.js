@@ -131,8 +131,6 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/movie", require("./Routes/movie.js"));
 app.use("/api/v1/auth", require("./Routes/auth.js"));
-app.use("/api/v1/requests", require("./Routes/request.js"));
-app.use("/api/v1/notifications", require("./Routes/notification.js"));
 
 // ======================= SERVER =======================
 const PORT = process.env.PORT || 3000;

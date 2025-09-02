@@ -10,8 +10,8 @@ const mongodb = async () => {
     mongoose.connect(mongoURI, {
         dbName: "MovieDb",
     })
-        .then(() => console.log("✅ MongoDB connected"))
-        .catch((err) => console.error("❌ MongoDB connection error:", err));
+        .then(() => console.log("MongoDB connected"))
+        .catch((err) => console.error("MongoDB connection error:", err.message));
 }
 
 module.exports = mongodb;
