@@ -2,17 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
 const dotenv = require("dotenv");
-const cors = require("cors");
 dotenv.config();
-
-// ------------------- CORS -------------------
-const corsOptions = {
-    origin: ["https://moviela.vercel.app", "http://localhost:5173"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true
-};
-router.use(cors(corsOptions));
-router.options("*", cors(corsOptions));
 
 // Credientials
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "balarcrens";
