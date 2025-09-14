@@ -60,13 +60,13 @@ function registerBotCommands(bot) {
         }
 
         try {
-            // ✅ Handle episode format first
+            let movie;
             if (payload.startsWith("episode_")) {
                 const parts = payload.split("_"); // ["episode", "slug", "number"]
                 const slug = parts[1];
                 const episodeNumber = parseInt(parts[2]);
 
-                const movie = await Movie.findOne({ slug });
+                movie = await Movie.findOne({ slug });
                 if (!movie || movie.type !== "WebSeries") {
                     return bot.sendMessage(chatId, "❌ Series not found.");
                 }
@@ -76,32 +76,51 @@ function registerBotCommands(bot) {
                     return bot.sendMessage(chatId, "❌ Episode not found.");
                 }
 
-                // ✅ Send the actual episode file
+                // ✅ Send episode in movie-style caption
                 return bot.sendDocument(chatId, episode.fileid, {
-                    caption: `📺 *${movie.movie_name}* - Ep ${episode.episode_number}\n${episode.title || ""}\n\n🕒 Duration: ${episode.duration || "N/A"}\n📁 Size: ${episode.size || "N/A"}`,
+                    caption: `━━━━━━━━━━━━━━
+                        🎬 *${movie.movie_name}*
+                        ━━━━━━━━━━━━━━
+                        💡 Title: _${episode.title || "Untitled Episode"}_
+                        🕒 Duration: *${episode.duration || "N/A"}*
+                        📁 Size: *${episode.size || "N/A"}*
+                        ━━━━━━━━━━━━━━
+                        ⚡ Download & Enjoy!`,
                     parse_mode: "Markdown"
                 });
             }
 
-            // Otherwise handle normal movie slug or fileid
-            let movie = await Movie.findOne({ fileid: payload });
-            if (!movie) movie = await Movie.findOne({ slug: payload.toLowerCase() });
+            movie = await Movie.findOne({ fileid: payload }) || await Movie.findOne({ slug: payload.toLowerCase() });
             if (!movie) return bot.sendMessage(chatId, `❌ Content not found for: ${payload}`);
 
             if (movie.type === "Movie") {
                 return bot.sendDocument(chatId, movie.fileid, {
-                    caption: `🎬 *${movie.movie_name}*\n\n🕒 Duration: ${movie.duration || "N/A"}\n📁 Size: ${movie.size || "N/A"}\n\n🔗 Enjoy!`,
-                    parse_mode: "Markdown",
+                    caption: `━━━━━━━━━━━━━━
+                        🎬 *${movie.movie_name}*
+                        ━━━━━━━━━━━━━━
+                        🕒 Duration: *${movie.duration || "N/A"}*
+                        📁 Size: *${movie.size || "N/A"}*
+                        ⭐ Rating: *${movie.rating || "N/A"}*
+                        ━━━━━━━━━━━━━━
+                        ⚡ Download & Enjoy!`,
+                    parse_mode: "Markdown"
                 });
             } else if (movie.type === "WebSeries") {
                 if (!movie.episodes || movie.episodes.length === 0) {
                     return bot.sendMessage(chatId, `❌ No episodes available for *${movie.movie_name}*`, { parse_mode: "Markdown" });
                 }
 
-                // ✅ Send first episode by default if /start is used with series slug only
+                // ✅ Send first episode in movie-style caption
                 const firstEpisode = movie.episodes[0];
                 return bot.sendDocument(chatId, firstEpisode.fileid, {
-                    caption: `📺 *${movie.movie_name}* - Ep ${firstEpisode.episode_number}\n${firstEpisode.title || ""}\n\n🕒 Duration: ${firstEpisode.duration || "N/A"}\n📁 Size: ${firstEpisode.size || "N/A"}`,
+                    caption: `━━━━━━━━━━━━━━
+                        🎬 *${movie.movie_name}*
+                        ━━━━━━━━━━━━━━
+                        💡 Title: _${firstEpisode.title || "Untitled Episode"}_
+                        🕒 Duration: *${firstEpisode.duration || "N/A"}*
+                        📁 Size: *${firstEpisode.size || "N/A"}*
+                        ━━━━━━━━━━━━━━
+                        ⚡ Download & Enjoy!`,
                     parse_mode: "Markdown"
                 });
             }
