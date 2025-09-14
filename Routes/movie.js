@@ -38,7 +38,7 @@ router.post("/add", RequireAdmin,
             let parsedEpisodes = [];
 
             if (type === "Movie") {
-                download_link = `https://t.me/movieladownload?start=${fileid || slug}`;
+                download_link = `https://t.me/movieladownload?start=${slug}`;
             } else if (type === "WebSeries" && episodes) {
                 try {
                     parsedEpisodes = JSON.parse(episodes);

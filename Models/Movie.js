@@ -17,7 +17,7 @@ const MovieSchema = new mongoose.Schema({
         required: true
     },
     movie_name: { type: String, required: true, trim: true },
-    fileid: { type: String, required: true }, // for movies
+    fileid: { type: String, required: function () { return this.type === "Movie"; }, trim: true }, // for movies
     description: { type: String, trim: true },
     summary: { type: String, trim: true },
     review: { type: String, trim: true },
