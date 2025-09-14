@@ -79,13 +79,13 @@ function registerBotCommands(bot) {
                 // ✅ Send episode in movie-style caption
                 return bot.sendDocument(chatId, episode.fileid, {
                     caption: `━━━━━━━━━━━━━━
-                        🎬 *${movie.movie_name}*
-                        ━━━━━━━━━━━━━━
-                        💡 Title: _${episode.title || "Untitled Episode"}_
-                        🕒 Duration: *${episode.duration || "N/A"}*
-                        📁 Size: *${episode.size || "N/A"}*
-                        ━━━━━━━━━━━━━━
-                        ⚡ Download & Enjoy!`,
+🎬 *${movie.movie_name}*
+━━━━━━━━━━━━━━
+💡 Title: _${episode.title || "Untitled Episode"}_
+🕒 Duration: *${episode.duration || "N/A"}*
+📁 Size: *${episode.size || "N/A"}*
+━━━━━━━━━━━━━━
+⚡ Download & Enjoy!`,
                     parse_mode: "Markdown"
                 });
             }
@@ -96,13 +96,13 @@ function registerBotCommands(bot) {
             if (movie.type === "Movie") {
                 return bot.sendDocument(chatId, movie.fileid, {
                     caption: `━━━━━━━━━━━━━━
-                        🎬 *${movie.movie_name}*
-                        ━━━━━━━━━━━━━━
-                        🕒 Duration: *${movie.duration || "N/A"}*
-                        📁 Size: *${movie.size || "N/A"}*
-                        ⭐ Rating: *${movie.rating || "N/A"}*
-                        ━━━━━━━━━━━━━━
-                        ⚡ Download & Enjoy!`,
+🎬 *${movie.movie_name}*
+━━━━━━━━━━━━━━
+🕒 Duration: *${movie.duration || "N/A"}*
+📁 Size: *${movie.size || "N/A"}*
+⭐ Rating: *${movie.rating || "N/A"}*
+━━━━━━━━━━━━━━
+⚡ Download & Enjoy!`,
                     parse_mode: "Markdown"
                 });
             } else if (movie.type === "WebSeries") {
@@ -114,13 +114,13 @@ function registerBotCommands(bot) {
                 const firstEpisode = movie.episodes[0];
                 return bot.sendDocument(chatId, firstEpisode.fileid, {
                     caption: `━━━━━━━━━━━━━━
-                        🎬 *${movie.movie_name}*
-                        ━━━━━━━━━━━━━━
-                        💡 Title: _${firstEpisode.title || "Untitled Episode"}_
-                        🕒 Duration: *${firstEpisode.duration || "N/A"}*
-                        📁 Size: *${firstEpisode.size || "N/A"}*
-                        ━━━━━━━━━━━━━━
-                        ⚡ Download & Enjoy!`,
+🎬 *${movie.movie_name}*
+━━━━━━━━━━━━━━
+💡 Title: _${firstEpisode.title || "Untitled Episode"}_
+🕒 Duration: *${firstEpisode.duration || "N/A"}*
+📁 Size: *${firstEpisode.size || "N/A"}*
+━━━━━━━━━━━━━━
+⚡ Download & Enjoy!`,
                     parse_mode: "Markdown"
                 });
             }
