@@ -50,7 +50,7 @@ router.post("/add", RequireAdmin,
             const movie = new Movie({
                 type,
                 movie_name,
-                fileid,
+                fileid: type === "Movie" ? fileid : undefined,
                 slug,
                 description,
                 rating,

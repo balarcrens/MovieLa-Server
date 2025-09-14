@@ -1,4 +1,3 @@
-// botCommands.js
 const Movie = require("./Models/Movie");
 
 function registerBotCommands(bot) {
@@ -7,10 +6,10 @@ function registerBotCommands(bot) {
         bot.sendMessage(
             chatId,
             `🤖 *Moviela Bot Help*\n
-            /help - Show this help menu
-            /websitelink - Get the official Moviela website
-            /moviela <movie-slug> - Download a specific movie
-            /latest - Get the latest uploaded movies`,
+/help - Show this help menu
+/websitelink - Get the official Moviela website
+/moviela <movie-slug> - Download a specific movie or webseries
+/latest - Get the latest uploaded movies`,
             { parse_mode: "Markdown" }
         );
     });
@@ -23,6 +22,7 @@ function registerBotCommands(bot) {
         );
     });
 
+    // ---------------- LATEST ----------------
     bot.onText(/\/latest/, async (msg) => {
         const chatId = msg.chat.id;
 
@@ -47,6 +47,7 @@ function registerBotCommands(bot) {
         }
     });
 
+    // ---------------- START ----------------
     bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
         const chatId = msg.chat.id;
         const payload = match[1]?.trim();
@@ -83,7 +84,7 @@ function registerBotCommands(bot) {
 
                 let response = `📺 *${movie.movie_name}* - Episodes:\n\n`;
                 movie.episodes.forEach((ep) => {
-                    response += `Ep ${ep.episode_number}: ${ep.title || "Untitled"}\n👉 /episode_${movie.fileid || movie.slug}_${ep.episode_number}\n\n`;
+                    response += `Ep ${ep.episode_number}: ${ep.title || "Untitled"}\n👉 /episode_${movie.slug}_${ep.episode_number}\n\n`;
                 });
 
                 return bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
@@ -94,6 +95,35 @@ function registerBotCommands(bot) {
         }
     });
 
+    // ---------------- EPISODE DOWNLOAD ----------------
+    bot.onText(/\/episode_(.+)_(\d+)/, async (msg, match) => {
+        const chatId = msg.chat.id;
+        const slug = match[1];
+        const episodeNumber = parseInt(match[2]);
+
+        try {
+            const movie = await Movie.findOne({ slug });
+            if (!movie || movie.type !== "WebSeries") {
+                return bot.sendMessage(chatId, "❌ Series not found.");
+            }
+
+            const episode = movie.episodes.find(ep => ep.episode_number === episodeNumber);
+            if (!episode) {
+                return bot.sendMessage(chatId, "❌ Episode not found.");
+            }
+
+            // Send Episode File
+            return bot.sendDocument(chatId, episode.fileid, {
+                caption: `📺 *${movie.movie_name}* - Ep ${episode.episode_number}\n${episode.title || ""}\n\n🕒 Duration: ${episode.duration || "N/A"}\n📁 Size: ${episode.size || "N/A"}`,
+                parse_mode: "Markdown"
+            });
+        } catch (err) {
+            console.error("❌ Error:", err.message);
+            bot.sendMessage(chatId, "❌ Something went wrong.");
+        }
+    });
+
+    // ---------------- CHANNEL POST (FileID Capture) ----------------
     bot.on("channel_post", (msg) => {
         console.log("📨 New message from channel:", JSON.stringify(msg, null, 2));
         const chatId = msg.chat.id;
