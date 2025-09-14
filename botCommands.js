@@ -1,0 +1,116 @@
+// botCommands.js
+const Movie = require("./Models/Movie");
+
+function registerBotCommands(bot) {
+    bot.onText(/\/help/, async (msg) => {
+        const chatId = msg.chat.id;
+        bot.sendMessage(
+            chatId,
+            `🤖 *Moviela Bot Help*\n
+            /help - Show this help menu
+            /websitelink - Get the official Moviela website
+            /moviela <movie-slug> - Download a specific movie
+            /latest - Get the latest uploaded movies`,
+            { parse_mode: "Markdown" }
+        );
+    });
+
+    bot.onText(/\/websitelink/, async (msg) => {
+        const chatId = msg.chat.id;
+        bot.sendMessage(
+            chatId,
+            `🌐 Visit our website for more movies:\n👉 https://moviela.vercel.app`
+        );
+    });
+
+    bot.onText(/\/latest/, async (msg) => {
+        const chatId = msg.chat.id;
+
+        try {
+            const latestMovies = await Movie.find()
+                .sort({ createdAt: -1 })
+                .limit(5);
+
+            if (latestMovies.length === 0) {
+                return bot.sendMessage(chatId, "❌ No movies uploaded yet.");
+            }
+
+            let response = "🔥 *Latest Movies Uploaded:*\n\n";
+            latestMovies.forEach((m, i) => {
+                response += `${i + 1}. 🎬 *${m.movie_name}* \n🔗 /moviela ${m.slug}\n\n`;
+            });
+
+            bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+        } catch (err) {
+            console.error(err.message);
+            bot.sendMessage(chatId, "❌ Failed to fetch latest movies.");
+        }
+    });
+
+    bot.onText(/\/start(?:\s+(.+))?/, async (msg, match) => {
+        const chatId = msg.chat.id;
+        const payload = match[1]?.trim();
+
+        if (!payload) {
+            return bot.sendMessage(
+                chatId,
+                `🎬 Welcome to Moviela Bot!\nDownload Your Favourite Movie or WebSeries From The Website.\n👉 https://moviela.vercel.app`
+            );
+        }
+
+        try {
+            // Try to find by fileid first, then fallback to slug
+            let movie = await Movie.findOne({ fileid: payload });
+            if (!movie) {
+                movie = await Movie.findOne({ slug: payload.toLowerCase() });
+            }
+
+            if (!movie) {
+                return bot.sendMessage(chatId, `❌ Content not found for: ${payload}`);
+            }
+
+            if (movie.type === "Movie") {
+                // Send Movie File
+                return bot.sendDocument(chatId, movie.fileid, {
+                    caption: `🎬 *${movie.movie_name}*\n\n🕒 Duration: ${movie.duration || "N/A"}\n📁 Size: ${movie.size || "N/A"}\n\n🔗 Enjoy!`,
+                    parse_mode: "Markdown",
+                });
+            } else if (movie.type === "WebSeries") {
+                // Show Episode List
+                if (!movie.episodes || movie.episodes.length === 0) {
+                    return bot.sendMessage(chatId, `❌ No episodes available for *${movie.movie_name}*`, { parse_mode: "Markdown" });
+                }
+
+                let response = `📺 *${movie.movie_name}* - Episodes:\n\n`;
+                movie.episodes.forEach((ep) => {
+                    response += `Ep ${ep.episode_number}: ${ep.title || "Untitled"}\n👉 /episode_${movie.fileid || movie.slug}_${ep.episode_number}\n\n`;
+                });
+
+                return bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+            }
+        } catch (err) {
+            console.error("❌ Error:", err.message);
+            bot.sendMessage(chatId, `❌ Something went wrong. Try again later.`);
+        }
+    });
+
+    bot.on("channel_post", (msg) => {
+        console.log("📨 New message from channel:", JSON.stringify(msg, null, 2));
+        const chatId = msg.chat.id;
+
+        if (msg.video) {
+            const fileId = msg.video.file_id;
+            bot.sendMessage(chatId, `🎬 Video File ID:\n${fileId}`);
+        } else if (msg.document) {
+            const fileId = msg.document.file_id;
+            bot.sendMessage(chatId, `📄 Document File ID:\n${fileId}`);
+        } else if (msg.photo) {
+            const fileId = msg.photo[msg.photo.length - 1].file_id;
+            bot.sendMessage(chatId, `🖼️ Photo File ID:\n${fileId}`);
+        } else if (msg.text) {
+            console.log("📝 Text message from channel:", msg.text);
+        }
+    });
+}
+
+module.exports = registerBotCommands;

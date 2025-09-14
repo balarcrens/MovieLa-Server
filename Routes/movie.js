@@ -6,7 +6,7 @@ const upload = require("../config/multer");
 const { uploadToCloudinary } = require("../config/cloudinary");
 const RequireAdmin = require("../Middleware/RequireAdmin");
 
-// ------------------- ADD MOVIE -------------------
+// ------------------- ADD MOVIE OR WEBSERIES -------------------
 router.post("/add", RequireAdmin,
     upload.fields([
         { name: "poster", maxCount: 1 },
@@ -15,13 +15,12 @@ router.post("/add", RequireAdmin,
     async (req, res) => {
         try {
             const {
-                movie_name, fileid, description, rating, trailer_link, summary,
+                type, movie_name, fileid, description, rating, trailer_link, summary,
                 duration, size, categories, releaseDate, industry, actors,
-                director, language, keywords, meta_description, review
+                director, language, keywords, meta_description, review, episodes
             } = req.body;
 
             const slug = slugify(movie_name, { lower: true, strict: true });
-            const download_link = `https://t.me/movieladownload/start=${slug}`;
 
             let posterUrl = "";
             if (req.files.poster) {
@@ -35,7 +34,21 @@ router.post("/add", RequireAdmin,
                 ));
             }
 
+            let download_link = "";
+            let parsedEpisodes = [];
+
+            if (type === "Movie") {
+                download_link = `https://t.me/movieladownload?start=${fileid || slug}`;
+            } else if (type === "WebSeries" && episodes) {
+                try {
+                    parsedEpisodes = JSON.parse(episodes);
+                } catch (err) {
+                    return res.status(400).json({ error: "Invalid episodes format, must be JSON" });
+                }
+            }
+
             const movie = new Movie({
+                type,
                 movie_name,
                 fileid,
                 slug,
@@ -43,6 +56,7 @@ router.post("/add", RequireAdmin,
                 rating,
                 posterUrl,
                 download_link,
+                episodes: parsedEpisodes,
                 trailer_link,
                 summary,
                 duration,
@@ -60,7 +74,6 @@ router.post("/add", RequireAdmin,
             });
 
             const savedMovie = await movie.save();
-
             res.status(201).json({ success: true, movie: savedMovie });
 
         } catch (error) {
@@ -70,7 +83,25 @@ router.post("/add", RequireAdmin,
     }
 );
 
-// ------------------- GET MOVIES -------------------
+// ------------------- ADD EPISODE TO A SERIES -------------------
+router.post("/addepisode/:id", RequireAdmin, async (req, res) => {
+    try {
+        const { episode_number, title, duration, size, fileid, releaseDate } = req.body;
+
+        const movie = await Movie.findById(req.params.id);
+        if (!movie) return res.status(404).json({ error: "WebSeries not found" });
+        if (movie.type !== "WebSeries") return res.status(400).json({ error: "Only WebSeries can have episodes" });
+
+        movie.episodes.push({ episode_number, title, duration, size, fileid, releaseDate });
+        await movie.save();
+
+        res.json({ success: true, message: "Episode added successfully", series: movie });
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error", message: error.message });
+    }
+});
+
+// ------------------- GET MOVIES/WEBSERIES -------------------
 router.get("/getmovie", async (req, res) => {
     try {
         const { search } = req.query;
@@ -114,7 +145,7 @@ router.get("/category/:category", async (req, res) => {
             categories: { $in: [new RegExp("^" + category + "$", "i")] }
         }).sort({ createdAt: -1 });
 
-        if (!movies.length) return res.status(404).json({ error: "No movies found for this category" });
+        if (!movies.length) return res.status(404).json({ error: "No movies/webseries found for this category" });
         res.json({ success: true, movies });
     } catch (error) {
         res.status(500).json({ error: "Server error", message: error.message });
@@ -141,7 +172,7 @@ router.get("/filter", async (req, res) => {
     }
 });
 
-// ------------------- GET MOVIE BY SLUG -------------------
+// ------------------- GET MOVIE/WEBSERIES BY SLUG -------------------
 router.get("/slug/:slug", async (req, res) => {
     try {
         const movie = await Movie.findOneAndUpdate(
@@ -149,19 +180,19 @@ router.get("/slug/:slug", async (req, res) => {
             { $inc: { views: 1 } },
             { new: true }
         );
-        if (!movie) return res.status(404).json({ error: "Movie not found" });
+        if (!movie) return res.status(404).json({ error: "Not found" });
         res.json({ movie });
     } catch (error) {
         res.status(500).json({ error: "Server error", message: error.message });
     }
 });
 
-// ------------------- DELETE MOVIE -------------------
-router.delete("/delete/:id", async (req, res) => {
+// ------------------- DELETE MOVIE/WEBSERIES -------------------
+router.delete("/delete/:id", RequireAdmin, async (req, res) => {
     try {
         const deletedMovie = await Movie.findByIdAndDelete(req.params.id);
-        if (!deletedMovie) return res.status(404).json({ error: "Movie not found" });
-        res.json({ success: true, message: "Movie deleted successfully" });
+        if (!deletedMovie) return res.status(404).json({ error: "Not found" });
+        res.json({ success: true, message: "Deleted successfully" });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ error: "Internal Server Error", message: err.message });
