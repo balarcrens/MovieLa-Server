@@ -6,15 +6,12 @@ const dotenv = require("dotenv");
 const path = require("path");
 const bodyParser = require("body-parser");
 const TelegramBot = require("node-telegram-bot-api");
-const Movie = require("./Models/Movie.js");
 const registerBotCommands = require("./botCommands.js");
 
 dotenv.config();
 
 const app = express();
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const DOMAIN = process.env.DOMAIN;
-const NODE_ENV = process.env.NODE_ENV || "development";
 
 // ======================= MIDDLEWARE =======================
 app.use(cors());
