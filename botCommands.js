@@ -41,7 +41,7 @@ function registerBotCommands(bot) {
                 response += `[📥 Click to Download](https://t.me/movieladownload?start=${m.slug})\n\n`;
             });
 
-            bot.sendMessage(chatId, response, m.fileid, { parse_mode: "Markdown" });
+            bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
         } catch (err) {
             console.error(err.message);
             bot.sendMessage(chatId, "❌ Failed to fetch latest movies.");
