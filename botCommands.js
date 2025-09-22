@@ -162,19 +162,28 @@ function registerBotCommands(bot) {
     // ---------------- CHANNEL POST (FileID Capture) ----------------
     bot.on("channel_post", (msg) => {
         console.log("📨 New message from channel:", JSON.stringify(msg, null, 2));
-        const chatId = msg.chat.id;
+        const chatId = 1364566134;
 
-        if (msg.video) {
-            const fileId = msg.video.file_id;
-            bot.sendMessage(chatId, `🎬 Video File ID:\n${fileId}`);
-        } else if (msg.document) {
-            const fileId = msg.document.file_id;
-            bot.sendMessage(chatId, `📄 Document File ID:\n${fileId}`);
+        let fileId, fileName, caption;
+
+        if (msg.document) {
+            fileId = msg.document.file_id;
+            fileName = msg.document.file_name || "Unnamed Document";
+        } else if (msg.video) {
+            fileId = msg.video.file_id;
+            fileName = msg.video.file_name || "Unnamed Video";
         } else if (msg.photo) {
-            const fileId = msg.photo[msg.photo.length - 1].file_id;
-            bot.sendMessage(chatId, `🖼️ Photo File ID:\n${fileId}`);
-        } else if (msg.text) {
-            console.log("📝 Text message from channel:", msg.text);
+            fileId = msg.photo[msg.photo.length - 1].file_id;
+            fileName = "Photo Upload";
+        }
+
+        caption = msg.caption ? `📝 Caption: ${msg.caption}\n` : "";
+
+        if (fileId) {
+            bot.sendMessage(chatId,
+                `📄 *File Captured*\n\n📛 Name: ${fileName}\n${caption}🆔 File ID:\n\`${fileId}\``,
+                { parse_mode: "Markdown" }
+            );
         }
     });
 }
