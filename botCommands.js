@@ -38,9 +38,10 @@ function registerBotCommands(bot) {
             let response = "🔥 *Latest Movies Uploaded:*\n\n";
             latestMovies.forEach((m, i) => {
                 response += `${i + 1}. 🎬 *${m.movie_name}* \n🔗 /start ${m.slug}\n\n`;
+                response += `[📥 Click to Download](https://t.me/movieladownload?start=${m.slug})\n\n`;
             });
 
-            bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+            bot.sendMessage(chatId, response, m.fileid, { parse_mode: "Markdown" });
         } catch (err) {
             console.error(err.message);
             bot.sendMessage(chatId, "❌ Failed to fetch latest movies.");
