@@ -37,7 +37,7 @@ function registerBotCommands(bot) {
 
             let response = "🔥 *Latest Movies Uploaded:*\n\n";
             latestMovies.forEach((m, i) => {
-                response += `${i + 1}. 🎬 *${m.movie_name}* \n🔗 /moviela ${m.slug}\n\n`;
+                response += `${i + 1}. 🎬 *${m.movie_name}* \n🔗 /start ${m.slug}\n\n`;
             });
 
             bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
