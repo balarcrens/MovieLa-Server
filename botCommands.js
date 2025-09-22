@@ -38,7 +38,7 @@ function registerBotCommands(bot) {
             let response = "🔥 *Latest Movies Uploaded:*\n\n";
             latestMovies.forEach((m, i) => {
                 response += `${i + 1}. 🎬 *${m.movie_name}* \n🔗 /start ${m.slug}\n\n`;
-                response += `[📥 Click to Download](https://t.me/movieladownload?start=${m.slug})\n\n`;
+                response += `[📥 Click to Download](https://t.me/movieladownloadbot?start=${m.slug})\n\n`;
             });
 
             bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
