@@ -46,4 +46,20 @@ router.get("/", RequireAdmin, async (req, res) => {
     }
 });
 
+router.delete("/:id", RequireAdmin, async (req, res) => {
+    try {
+        const request = await MovieRequest.findById(req.params.id);
+        if (!request) {
+            return res.status(404).json({ success: false, message: "Request not found" });
+        }
+        else {
+            await MovieRequest.findByIdAndDelete(req.params.id);
+            res.json({ success: true, message: "Request deleted successfully" });
+        }
+    } catch (err) {
+        console.error("Error deleting movie request:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
 module.exports = router;
