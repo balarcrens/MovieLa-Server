@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
     try {
-        const { movie_name, user_name, user_email, comment, reference_link } = req.body;
+        const { movie_name, user_name, user_email, comment, link } = req.body;
 
         if (!movie_name || !user_name) {
             return res.status(400).json({ message: "Please fill required fields" });
@@ -16,7 +16,7 @@ router.post("/", async (req, res) => {
             user_name: user_name.trim(),
             user_email: user_email.trim(),
             comment: comment?.trim(),
-            reference_link: reference_link?.trim(),
+            link: link?.trim(),
         });
 
         await newRequest.save();
