@@ -115,12 +115,11 @@ router.get("/getmovie", async (req, res) => {
             query = { $or: [{ movie_name: regex }, { categories: regex }] };
         }
 
-        const movies = await Movie.find(query)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        const totalMovies = await Movie.countDocuments(query);
+        const [movies, totalMovies] = await Promise.all([
+            Movie.find(query, { movie_name: 1, posterUrl: 1, rating: 1, slug: 1, description: 1, categories: 1, type: 1 })
+                .sort({ createdAt: -1 }).skip(skip).limit(limit),
+            Movie.countDocuments(query)
+        ]);
 
         res.status(200).json({
             success: true,
@@ -130,7 +129,6 @@ router.get("/getmovie", async (req, res) => {
             totalPages: Math.ceil(totalMovies / limit),
             currentPage: page
         });
-
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ error: "Internal Server Error" });
@@ -141,11 +139,15 @@ router.get("/getmovie", async (req, res) => {
 router.get("/category/:category", async (req, res) => {
     try {
         const category = req.params.category;
-        const movies = await Movie.find({
-            categories: { $in: [new RegExp("^" + category + "$", "i")] }
-        }).sort({ createdAt: -1 });
 
-        if (!movies.length) return res.status(404).json({ error: "No movies/webseries found for this category" });
+        const movies = await Movie.find(
+            { categories: { $in: [new RegExp("^" + category + "$", "i")] } },
+            { movie_name: 1, posterUrl: 1, rating: 1, slug: 1, description: 1, categories: 1, type: 1 }
+        ).sort({ createdAt: -1 });
+
+        if (!movies.length)
+            return res.status(404).json({ error: "No movies/webseries found for this category" });
+
         res.json({ success: true, movies });
     } catch (error) {
         res.status(500).json({ error: "Server error", message: error.message });
@@ -164,9 +166,10 @@ router.get("/filter", async (req, res) => {
         else if (sortBy === "popular") sort = { views: -1 };
         else if (sortBy === "rating") sort = { rating: -1 };
 
-        const movies = await Movie.find(filter).sort(sort);
-        res.json({ movies });
+        const movies = await Movie.find(filter, { movie_name: 1, posterUrl: 1, rating: 1, slug: 1, description: 1, categories: 1, type: 1 })
+            .sort(sort);
 
+        res.json({ movies });
     } catch (error) {
         res.status(500).json({ error: "Server error", message: error.message });
     }
