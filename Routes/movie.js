@@ -190,6 +190,114 @@ router.get("/slug/:slug", async (req, res) => {
     }
 });
 
+// ------------------- GET MOVIE/WEBSERIES BY ID -------------------
+router.get("/getmovie/:id", async (req, res) => {
+    try {
+        const movie = await Movie.findById(req.params.id);
+
+        if (!movie) {
+            return res.status(404).json({ success: false, error: "Movie not found" });
+        }
+
+        res.status(200).json({ success: true, movie });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ success: false, error: "Invalid ID or Server Error" });
+    }
+});
+
+// ------------------- UPDATE MOVIE/WEBSERIES -------------------
+router.put("/update/:id", RequireAdmin,
+    upload.fields([
+        { name: "poster", maxCount: 1 },
+        { name: "screenshots", maxCount: 10 }
+    ]),
+    async (req, res) => {
+        try {
+            const movie = await Movie.findById(req.params.id);
+            if (!movie) {
+                return res.status(404).json({ success: false, error: "Movie not found" });
+            }
+
+            const { type, movie_name, fileid, description, rating, trailer_link, summary, duration, size, categories, releaseDate,
+                industry, actors, director, language, keywords, meta_description, review, episodes
+            } = req.body;
+
+            // Update slug if movie name changes
+            if (movie_name && movie_name !== movie.movie_name) {
+                movie.movie_name = movie_name;
+                movie.slug = slugify(movie_name, { lower: true, strict: true });
+            }
+
+            // Poster update (optional)
+            if (req.files?.poster) {
+                movie.posterUrl = await uploadToCloudinary(
+                    req.files.poster[0],
+                    "movies/posters"
+                );
+            }
+
+            // Screenshots update (optional – replaces old ones)
+            if (req.files?.screenshots) {
+                movie.screenshots = await Promise.all(
+                    req.files.screenshots.map(file =>
+                        uploadToCloudinary(file, "movies/screenshots")
+                    )
+                );
+            }
+
+            // Episodes update (WebSeries only)
+            if (type === "WebSeries" && episodes) {
+                try {
+                    movie.episodes = JSON.parse(episodes);
+                } catch (err) {
+                    return res.status(400).json({ error: "Invalid episodes JSON" });
+                }
+            }
+
+            // Assign remaining fields
+            movie.type = type ?? movie.type;
+            movie.fileid = type === "Movie" ? fileid : undefined;
+            movie.description = description ?? movie.description;
+            movie.rating = rating ?? movie.rating;
+            movie.trailer_link = trailer_link ?? movie.trailer_link;
+            movie.summary = summary ?? movie.summary;
+            movie.duration = duration ?? movie.duration;
+            movie.size = size ?? movie.size;
+            movie.releaseDate = releaseDate ?? movie.releaseDate;
+            movie.industry = industry ?? movie.industry;
+            movie.director = director ?? movie.director;
+            movie.language = language ?? movie.language;
+            movie.meta_description = meta_description ?? movie.meta_description;
+            movie.review = review ?? movie.review;
+
+            // Array fields handling
+            if (categories) {
+                movie.categories = Array.isArray(categories) ? categories : [categories];
+            }
+
+            if (actors) {
+                movie.actors = Array.isArray(actors) ? actors : [actors];
+            }
+
+            if (keywords) {
+                movie.keywords = Array.isArray(keywords) ? keywords : [keywords];
+            }
+
+            await movie.save();
+
+            res.status(200).json({
+                success: true,
+                message: "Movie updated successfully",
+                movie
+            });
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
+);
+
 // ------------------- DELETE MOVIE/WEBSERIES -------------------
 router.delete("/delete/:id", RequireAdmin, async (req, res) => {
     try {
