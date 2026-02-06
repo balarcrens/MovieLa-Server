@@ -19,7 +19,7 @@ function uploadToCloudinary(file, folder) {
             },
             (error, result) => {
                 if (error) reject(error);
-                else resolve(result.secure_url); // ✅ return Cloudinary URL
+                else resolve(result.secure_url); // return Cloudinary URL
             }
         );
 

@@ -3,7 +3,7 @@ const Movie = require("../Models/Movie");
 const router = express.Router();
 const slugify = require("slugify");
 const upload = require("../config/multer");
-const { uploadToCloudinary } = require("../config/cloudinary");
+const { uploadToImageKit } = require("../config/imagekit");
 const RequireAdmin = require("../Middleware/RequireAdmin");
 
 // ------------------- ADD MOVIE OR WEBSERIES -------------------
@@ -22,15 +22,17 @@ router.post("/add", RequireAdmin,
 
             const slug = slugify(movie_name, { lower: true, strict: true });
 
+            // Poster upload
             let posterUrl = "";
             if (req.files.poster) {
-                posterUrl = await uploadToCloudinary(req.files.poster[0], "movies/posters");
+                posterUrl = await uploadToImageKit(req.files.poster[0], "movies/posters");
             }
 
+            // Screenshots upload
             let screenshots = [];
             if (req.files.screenshots) {
                 screenshots = await Promise.all(req.files.screenshots.map(file =>
-                    uploadToCloudinary(file, "movies/screenshots")
+                    uploadToImageKit(file, "movies/screenshots")
                 ));
             }
 
@@ -231,7 +233,7 @@ router.put("/update/:id", RequireAdmin,
 
             // Poster update (optional)
             if (req.files?.poster) {
-                movie.posterUrl = await uploadToCloudinary(
+                movie.posterUrl = await uploadToImageKit(
                     req.files.poster[0],
                     "movies/posters"
                 );
@@ -241,7 +243,7 @@ router.put("/update/:id", RequireAdmin,
             if (req.files?.screenshots) {
                 movie.screenshots = await Promise.all(
                     req.files.screenshots.map(file =>
-                        uploadToCloudinary(file, "movies/screenshots")
+                        uploadToImageKit(file, "movies/screenshots")
                     )
                 );
             }
