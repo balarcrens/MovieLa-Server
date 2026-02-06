@@ -159,7 +159,6 @@ function registerBotCommands(bot) {
         }
     });
 
-    // ---------------- CHANNEL POST (FileID Capture) ----------------
     bot.on("channel_post", (msg) => {
         console.log("📨 New message from channel:", JSON.stringify(msg, null, 2));
         const chatId = 1364566134;
@@ -180,8 +179,13 @@ function registerBotCommands(bot) {
         caption = msg.caption ? `📝 Caption: ${msg.caption}\n` : "";
 
         if (fileId) {
+            function escapeMarkdown(text) {
+                if (!text) return "";
+                return text.replace(/([_*[\]()~`>#+-=|{}.!])/g, "\\$1");
+            }
+
             bot.sendMessage(chatId,
-                `📄 *File Captured*\n\n📛 Name: ${fileName}\n${caption}🆔 File ID:\n\`${fileId}\``,
+                `📄 *File Captured*\n\n📛 Name: ${escapeMarkdown(fileName)}\n${escapeMarkdown(caption)}🆔 File ID:\n\`${fileId}\``,
                 { parse_mode: "Markdown" }
             );
         }
