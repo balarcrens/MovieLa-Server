@@ -1,3 +1,4 @@
+const File = require("./Models/File");
 const Movie = require("./Models/Movie");
 
 function registerBotCommands(bot) {
@@ -159,36 +160,60 @@ function registerBotCommands(bot) {
         }
     });
 
-    bot.on("channel_post", (msg) => {
-        console.log("📨 New message from channel:", JSON.stringify(msg, null, 2));
-        const chatId = 1364566134;
+    bot.on("channel_post", async (msg) => {
+        const adminChatId = 1364566134;
+        let fileId, fileName, caption, type;
 
-        let fileId, fileName, caption;
-
+        // Detect file type
         if (msg.document) {
             fileId = msg.document.file_id;
             fileName = msg.document.file_name || "Unnamed Document";
+            type = "Movie";
         } else if (msg.video) {
             fileId = msg.video.file_id;
             fileName = msg.video.file_name || "Unnamed Video";
+            type = "Movie";
         } else if (msg.photo) {
             fileId = msg.photo[msg.photo.length - 1].file_id;
             fileName = "Photo Upload";
+            type = "Movie";
         }
 
-        caption = msg.caption ? `📝 Caption: ${msg.caption}\n` : "";
+        caption = msg.caption || "";
 
-        if (fileId) {
-            function escapeMarkdown(text) {
-                if (!text) return "";
-                return text.replace(/([_*[\]()~`>#+-=|{}.!])/g, "\\$1");
-            }
+        if (!fileId) return;
 
-            bot.sendMessage(chatId,
-                `📄 *File Captured*\n\n📛 Name: ${escapeMarkdown(fileName)}\n${escapeMarkdown(caption)}🆔 File ID:\n\`${fileId}\``,
-                { parse_mode: "Markdown" }
-            );
+        // Extract movie name from first line of caption
+        let movieName = caption.split("\n")[0].replace(/🎬/g, "").trim();
+        let movie = await Movie.findOne({ movie_name: movieName });
+
+        // Escape markdown for admin message
+        function escapeMarkdown(text) {
+            if (!text) return "";
+            return text.replace(/([_*[\]()~`>#+-=|{}.!])/g, "\\$1");
         }
+
+        // Send admin message
+        const message = `
+📄 *File Captured!*
+📛 *Name:* ${escapeMarkdown(fileName)}
+${caption ? `📝 *Caption:* ${escapeMarkdown(caption)}` : ""}
+🆔 *File ID:* \`${fileId}\`
+🎬 Linked Movie: ${movie ? escapeMarkdown(movie.movie_name) : "N/A"}
+        `;
+        bot.sendMessage(adminChatId, message, { parse_mode: "Markdown" });
+
+        // Save file in DB
+        const newFile = new File({
+            movie: movie ? movie._id : null,
+            movie_name: fileName,
+            fileid: fileId,
+            caption,
+            type: movie ? movie.type : "Movie"
+        });
+
+        await newFile.save();
+        console.log(`File saved: ${fileName} linked to movie: ${movie ? movie.movie_name : "N/A"}`);
     });
 }
 
