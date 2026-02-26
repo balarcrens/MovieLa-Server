@@ -77,7 +77,6 @@ function registerBotCommands(bot) {
                     return bot.sendMessage(chatId, "❌ Episode not found.");
                 }
 
-                // ✅ Send episode in movie-style caption
                 return bot.sendDocument(chatId, episode.fileid, {
                     caption: `━━━━━━━━━━━━━━
 🎬 *${movie.movie_name}*
@@ -111,7 +110,6 @@ function registerBotCommands(bot) {
                     return bot.sendMessage(chatId, `❌ No episodes available for *${movie.movie_name}*`, { parse_mode: "Markdown" });
                 }
 
-                // ✅ Send first episode in movie-style caption
                 const firstEpisode = movie.episodes[0];
                 return bot.sendDocument(chatId, firstEpisode.fileid, {
                     caption: `━━━━━━━━━━━━━━
@@ -188,18 +186,17 @@ function registerBotCommands(bot) {
         let movie = await Movie.findOne({ movie_name: movieName });
 
         // Escape markdown for admin message
-        function escapeMarkdown(text) {
-            if (!text) return "";
-            return text.replace(/([_*[\]()~`>#+-=|{}.!])/g, "\\$1");
-        }
+        // function escapeMarkdown(text) {
+        //     if (!text) return "";
+        //     return text.replace(/([_*[\]()~`>#+-=|{}.!])/g, "\\$1");
+        // }
 
         // Send admin message
         const message = `
 📄 *File Captured!*
-📛 *Name:* ${escapeMarkdown(fileName)}
-${caption ? `📝 *Caption:* ${escapeMarkdown(caption)}` : ""}
+📛 *Name:* ${fileName}
+${caption ? `📝 *Caption:* ${caption}` : ""}
 🆔 *File ID:* \`${fileId}\`
-🎬 Linked Movie: ${movie ? escapeMarkdown(movie.movie_name) : "N/A"}
         `;
         bot.sendMessage(adminChatId, message, { parse_mode: "Markdown" });
 
@@ -213,7 +210,7 @@ ${caption ? `📝 *Caption:* ${escapeMarkdown(caption)}` : ""}
         });
 
         await newFile.save();
-        console.log(`File saved: ${fileName} linked to movie: ${movie ? movie.movie_name : "N/A"}`);
+        console.log(`File saved: ${fileName} linked to movie: ${movie ? movie?.movie_name : "N/A"}`);
     });
 }
 
